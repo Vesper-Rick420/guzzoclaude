@@ -17,10 +17,9 @@
   --color-guzzo-orange-burnt: #ed6e1e;
   --color-guzzo-yellow: #fcc00d;
 
-  /* Tipografías */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-outfit);
+  /* Tipografías de marca (Jost ~ Futura) */
+  --font-sans: var(--font-jost);
+  --font-heading: var(--font-jost);
 }
 
 /* Tema oscuro premium como base */

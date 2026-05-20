@@ -1,15 +1,21 @@
 import { cn } from "@/lib/utils";
+import { GuzzoFlame } from "@/components/guzzo-flame";
 
-/** Logotipo tipografico temporal de GUZZO (placeholder hasta tener el logo oficial). */
+/**
+ * Logotipo de GUZZO: la palabra con la llama como segunda letra,
+ * siguiendo el imagotipo del manual de marca.
+ */
 export function GuzzoLogo({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "font-heading font-black tracking-tight text-guzzo-white",
+        "inline-flex items-center font-heading font-black leading-none tracking-tight text-guzzo-white",
         className,
       )}
     >
-      GU<span className="text-guzzo-orange">Z</span>ZO
+      G
+      <GuzzoFlame className="mx-[0.03em] h-[1.05em] w-[0.82em]" />
+      ZZO
     </span>
   );
 }

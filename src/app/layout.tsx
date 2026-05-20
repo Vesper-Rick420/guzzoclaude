@@ -1,24 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Outfit } from "next/font/google";
+import { Jost } from "next/font/google";
 import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/splash-screen";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Jost: alternativa libre y geometrica a Futura, la tipografia de marca.
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Fuente de titulos: geometrica y gruesa, estilo Futura/Bogart.
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -33,10 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} h-full antialiased`}
-    >
+    <html lang="es" className={`${jost.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <SplashScreen />
         {children}
