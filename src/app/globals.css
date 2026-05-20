@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* =====================================================
+   GUZZO — Identidad de marca
+   Estos tokens generan utilidades de Tailwind:
+   bg-guzzo-orange, text-guzzo-orange, border-guzzo-orange, etc.
+   ===================================================== */
+@theme {
+  /* Colores principales */
+  --color-guzzo-black: #010101;
+  --color-guzzo-white: #ffffff;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Naranjas de marca */
+  --color-guzzo-orange: #f18a00;
+  --color-guzzo-orange-bright: #f39200;
+  --color-guzzo-orange-deep: #ef7d16;
+  --color-guzzo-orange-burnt: #ed6e1e;
+  --color-guzzo-yellow: #fcc00d;
+
+  /* Tipografías */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Tema oscuro premium como base */
+:root {
+  --background: #010101;
+  --foreground: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar estilo premium con degradado naranja */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #010101;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#f18a00, #ed6e1e);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(#f39200, #ed6e1e);
+}
+
+/* Selección de texto con color de marca */
+::selection {
+  background: #f18a00;
+  color: #010101;
 }
