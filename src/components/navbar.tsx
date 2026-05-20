@@ -15,15 +15,16 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { useCart } from "@/context/cart-context";
 import { GuzzoLogo } from "@/components/guzzo-logo";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { label: "Inicio", href: "/" },
-  { label: "Combos", href: "/#combos" },
-  { label: "Hamburguesas", href: "/#hamburguesas" },
-  { label: "Gaseosas", href: "/#gaseosas" },
-  { label: "Extras", href: "/#extras" },
+  { label: "Combos", href: "/menu/combos" },
+  { label: "Hamburguesas", href: "/menu/hamburguesas" },
+  { label: "Gaseosas", href: "/menu/gaseosas" },
+  { label: "Extras", href: "/menu/extras" },
 ];
 
 type NavbarProps = {
@@ -32,6 +33,7 @@ type NavbarProps = {
 
 export function Navbar({ profile }: NavbarProps) {
   const router = useRouter();
+  const { count } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -96,9 +98,14 @@ export function Navbar({ profile }: NavbarProps) {
           <Link
             href="/carrito"
             aria-label="Carrito"
-            className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
+            className="relative rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
           >
             <ShoppingBag className="h-5 w-5" />
+            {count > 0 && (
+              <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-guzzo-orange px-1 text-[10px] font-bold text-guzzo-black">
+                {count}
+              </span>
+            )}
           </Link>
 
           {/* Menu de usuario */}

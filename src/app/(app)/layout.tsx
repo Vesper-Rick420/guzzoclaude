@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { CartProvider } from "@/context/cart-context";
 
 /**
  * Layout de las paginas del cliente (menu, carrito, perfil...).
@@ -27,10 +28,12 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <Navbar profile={profile} />
-      <main className="flex flex-1 flex-col">{children}</main>
-      <Footer />
-    </div>
+    <CartProvider>
+      <div className="flex min-h-full flex-1 flex-col">
+        <Navbar profile={profile} />
+        <main className="flex flex-1 flex-col">{children}</main>
+        <Footer />
+      </div>
+    </CartProvider>
   );
 }

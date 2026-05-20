@@ -2,10 +2,10 @@ import Link from "next/link";
 import { GuzzoLogo } from "@/components/guzzo-logo";
 
 const MENU_LINKS = [
-  { label: "Combos", href: "/#combos" },
-  { label: "Hamburguesas", href: "/#hamburguesas" },
-  { label: "Gaseosas", href: "/#gaseosas" },
-  { label: "Extras", href: "/#extras" },
+  { label: "Combos", href: "/menu/combos" },
+  { label: "Hamburguesas", href: "/menu/hamburguesas" },
+  { label: "Gaseosas", href: "/menu/gaseosas" },
+  { label: "Extras", href: "/menu/extras" },
 ];
 
 const SOCIAL_LINKS = ["Instagram", "Facebook", "WhatsApp"];
