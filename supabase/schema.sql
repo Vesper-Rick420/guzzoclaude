@@ -133,6 +133,8 @@ $$;
 
 -- 3.3 protect_user_fields(): impide que un usuario normal
 --     se cambie el rol o el estado de bloqueo a si mismo.
+--     Las operaciones del servidor (SQL Editor, service_role) tienen
+--     auth.uid() nulo y son de confianza, por eso se permiten.
 create or replace function public.protect_user_fields()
 returns trigger
 language plpgsql
@@ -140,7 +142,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin() then
+  if auth.uid() is not null and not public.is_admin() then
     new.role := old.role;
     new.is_blocked := old.is_blocked;
   end if;
