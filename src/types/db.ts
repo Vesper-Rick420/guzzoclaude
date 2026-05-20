@@ -48,3 +48,15 @@ export type ProfileOrder = {
     products: { name: string } | null;
   }[];
 };
+
+/** Usuario tal como lo ve el panel de administracion. */
+export type AdminUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  cedula: string | null;
+  role: string;
+  is_blocked: boolean;
+  created_at: string;
+};
