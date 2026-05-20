@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Minus,
@@ -97,13 +98,14 @@ export function CartView() {
               key={item.id}
               className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
             >
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.07] to-transparent">
+              <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.07] to-transparent">
                 {item.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={item.image_url}
                     alt={item.name}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="80px"
+                    className="object-cover"
                   />
                 ) : (
                   <UtensilsCrossed className="h-7 w-7 text-white/15" />

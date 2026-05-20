@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { UtensilsCrossed, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -45,11 +46,12 @@ export function ProductCard({ product }: { product: Product }) {
         >
           <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
             {product.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={product.image_url}
                 alt={product.name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                fill
+                sizes="(max-width: 1024px) 50vw, 25vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
               <UtensilsCrossed className="h-12 w-12 text-white/15" />

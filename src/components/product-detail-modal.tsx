@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Minus, Plus, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
@@ -80,11 +81,12 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
 
             <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
               {product.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={product.image_url}
                   alt={product.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 512px"
+                  className="object-cover"
                 />
               ) : (
                 <UtensilsCrossed className="h-16 w-16 text-white/15" />

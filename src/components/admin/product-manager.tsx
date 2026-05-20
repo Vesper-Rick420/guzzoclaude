@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
@@ -101,13 +102,14 @@ export function ProductManager({ products, categories }: Props) {
             key={product.id}
             className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
           >
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.07] to-transparent">
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.07] to-transparent">
               {product.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={product.image_url}
                   alt={product.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="56px"
+                  className="object-cover"
                 />
               ) : (
                 <UtensilsCrossed className="h-5 w-5 text-white/15" />
