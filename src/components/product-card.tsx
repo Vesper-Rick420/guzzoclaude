@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { UtensilsCrossed, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/format";
+import { ProductDetailModal } from "@/components/product-detail-modal";
 import type { Product } from "@/types/db";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const [detailOpen, setDetailOpen] = useState(false);
 
   function handleAdd() {
     addItem({
@@ -21,37 +24,52 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <motion.article
-      whileHover={{ y: -6 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-colors hover:border-guzzo-orange/40"
-    >
-      {/* Imagen o marcador de posicion */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
-        {product.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <UtensilsCrossed className="h-12 w-12 text-white/15" />
-        )}
-        <div className="pointer-events-none absolute -bottom-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-guzzo-orange/20 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-      </div>
+    <>
+      <motion.article
+        whileHover={{ y: -6 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-colors hover:border-guzzo-orange/40"
+      >
+        {/* Region clickeable: abre el detalle del producto */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setDetailOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setDetailOpen(true);
+            }
+          }}
+          className="flex flex-1 cursor-pointer flex-col"
+        >
+          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
+            {product.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <UtensilsCrossed className="h-12 w-12 text-white/15" />
+            )}
+            <div className="pointer-events-none absolute -bottom-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-guzzo-orange/20 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+          </div>
+          <div className="flex flex-1 flex-col gap-2 p-4">
+            <h3 className="font-heading text-lg font-bold text-guzzo-white">
+              {product.name}
+            </h3>
+            {product.description && (
+              <p className="line-clamp-2 text-sm text-white/50">
+                {product.description}
+              </p>
+            )}
+          </div>
+        </div>
 
-      {/* Contenido */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="font-heading text-lg font-bold text-guzzo-white">
-          {product.name}
-        </h3>
-        {product.description && (
-          <p className="line-clamp-2 text-sm text-white/50">
-            {product.description}
-          </p>
-        )}
-        <div className="mt-auto flex items-center justify-between pt-2">
+        {/* Precio + boton agregar */}
+        <div className="flex items-center justify-between px-4 pb-4">
           <span className="font-heading text-xl font-extrabold text-guzzo-orange">
             {formatPrice(Number(product.price))}
           </span>
@@ -64,7 +82,13 @@ export function ProductCard({ product }: { product: Product }) {
             Agregar
           </button>
         </div>
-      </div>
-    </motion.article>
+      </motion.article>
+
+      <ProductDetailModal
+        product={product}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+      />
+    </>
   );
 }

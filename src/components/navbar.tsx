@@ -87,13 +87,13 @@ export function Navbar({ profile }: NavbarProps) {
 
         {/* Acciones */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            aria-label="Buscar"
+          <Link
+            href="/menu"
+            aria-label="Buscar en el menu"
             className="rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
           >
             <Search className="h-5 w-5" />
-          </button>
+          </Link>
 
           <Link
             href="/carrito"
