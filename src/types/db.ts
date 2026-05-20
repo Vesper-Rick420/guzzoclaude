@@ -18,3 +18,33 @@ export type Product = {
   is_featured: boolean;
   created_at: string;
 };
+
+export type OrderStatus =
+  | "pendiente"
+  | "preparando"
+  | "listo"
+  | "entregado"
+  | "cancelado";
+
+export type UserProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  cedula: string | null;
+  role: string;
+  created_at: string;
+};
+
+/** Pedido con sus productos, tal como lo usa el perfil. */
+export type ProfileOrder = {
+  id: string;
+  total: number;
+  status: OrderStatus;
+  created_at: string;
+  order_items: {
+    quantity: number;
+    unit_price: number;
+    products: { name: string } | null;
+  }[];
+};
