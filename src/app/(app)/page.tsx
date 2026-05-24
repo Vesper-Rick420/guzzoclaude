@@ -1,9 +1,23 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import {
+  CupSoda,
+  Hamburger,
+  Popcorn,
+  ShoppingBag,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Hero } from "@/components/hero";
 import { ProductCard } from "@/components/product-card";
 import type { Product, Category } from "@/types/db";
+
+const categoryIcons: Record<string, LucideIcon> = {
+  hamburguesas: Hamburger,
+  combos: ShoppingBag,
+  gaseosas: CupSoda,
+  extras: Popcorn,
+};
 
 export default async function Home() {
   const supabase = await createClient();
@@ -68,22 +82,25 @@ export default async function Home() {
             const count = allProducts.filter(
               (p) => p.category_id === cat.id,
             ).length;
+            const Icon = categoryIcons[cat.slug] ?? UtensilsCrossed;
             return (
               <Link
                 key={cat.id}
                 href={`/menu/${cat.slug}`}
-                className="group relative flex h-40 flex-col justify-end overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 transition-all hover:border-guzzo-orange/40"
+                className="group relative flex h-44 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 text-center transition-all hover:border-guzzo-orange/40"
               >
-                <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-guzzo-orange/10 blur-2xl transition-all group-hover:bg-guzzo-orange/25" />
-                <h3 className="font-heading text-2xl font-black text-guzzo-white">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-guzzo-orange/10 blur-2xl transition-all group-hover:bg-guzzo-orange/25" />
+                <Icon
+                  aria-hidden
+                  className="relative h-14 w-14 text-guzzo-orange transition-transform group-hover:scale-110"
+                  strokeWidth={1.5}
+                />
+                <h3 className="relative mt-3 font-heading text-2xl font-black text-guzzo-white">
                   {cat.name}
                 </h3>
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-sm text-white/40">
-                    {count} {count === 1 ? "producto" : "productos"}
-                  </span>
-                  <ArrowRight className="h-5 w-5 text-guzzo-orange transition-transform group-hover:translate-x-1" />
-                </div>
+                <span className="relative mt-1 text-sm text-white/40">
+                  {count} {count === 1 ? "producto" : "productos"}
+                </span>
               </Link>
             );
           })}

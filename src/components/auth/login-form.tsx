@@ -32,7 +32,14 @@ export function LoginForm() {
 
     if (error) {
       setLoading(false);
-      toast.error("Correo o contrasena incorrectos.");
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("invalid login credentials")) {
+        toast.error("Correo o contrasena incorrectos.");
+      } else if (msg.includes("email not confirmed")) {
+        toast.error("Confirma tu correo antes de iniciar sesion.");
+      } else {
+        toast.error(error.message || "No se pudo iniciar sesion.");
+      }
       return;
     }
 
