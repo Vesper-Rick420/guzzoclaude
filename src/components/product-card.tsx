@@ -10,15 +10,25 @@ import { formatPrice } from "@/lib/format";
 import { ProductDetailModal } from "@/components/product-detail-modal";
 import type { Product } from "@/types/db";
 
-export function ProductCard({ product }: { product: Product }) {
+type Props = {
+  product: Product;
+  categorySlug?: string | null;
+};
+
+export function ProductCard({ product, categorySlug = null }: Props) {
   const { addItem } = useCart();
   const [detailOpen, setDetailOpen] = useState(false);
 
   function handleAdd() {
+    // Si es hamburguesa, abrimos el modal para que personalice antes de agregar.
+    if (categorySlug === "hamburguesas") {
+      setDetailOpen(true);
+      return;
+    }
     addItem({
-      id: product.id,
+      productId: product.id,
       name: product.name,
-      price: Number(product.price),
+      basePrice: Number(product.price),
       image_url: product.image_url,
     });
     toast.success(`${product.name} agregado al carrito`);
@@ -90,6 +100,7 @@ export function ProductCard({ product }: { product: Product }) {
         product={product}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
+        categorySlug={categorySlug}
       />
     </>
   );

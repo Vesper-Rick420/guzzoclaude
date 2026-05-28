@@ -111,7 +111,13 @@ export function MenuView({ products, categories, activeSlug }: Props) {
       {visible.length > 0 ? (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {visible.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              categorySlug={
+                categories.find((c) => c.id === p.category_id)?.slug ?? null
+              }
+            />
           ))}
         </div>
       ) : (

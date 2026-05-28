@@ -1,8 +1,24 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  getExtraById,
+  isValidIngredient,
+  formatCustomizationNotes,
+} from "@/lib/burger-options";
 
-type CartLine = { id: string; quantity: number };
+type CartLine = {
+  productId: string;
+  quantity: number;
+  extraIds?: string[];
+  removedIngredients?: string[];
+};
+
+type CreateOrderInput = {
+  lines: CartLine[];
+  orderType: "takeaway" | "dinein";
+  paymentMethod: "efectivo" | "transferencia";
+};
 
 type CreateOrderResult =
   | { orderId: string; total: number }
@@ -10,11 +26,11 @@ type CreateOrderResult =
 
 /**
  * Crea un pedido en la base de datos.
- * Los precios se toman SIEMPRE de la BD, nunca del cliente,
- * para evitar manipulacion de precios.
+ * Los precios se toman SIEMPRE de la BD y de la lista canonica de extras,
+ * nunca del cliente, para evitar manipulacion.
  */
 export async function createOrder(
-  lines: CartLine[],
+  input: CreateOrderInput,
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
 
@@ -23,12 +39,23 @@ export async function createOrder(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Debes iniciar sesión para hacer un pedido." };
 
-  if (!Array.isArray(lines) || lines.length === 0) {
+  if (
+    !Array.isArray(input.lines) ||
+    input.lines.length === 0
+  ) {
     return { error: "Tu carrito está vacío." };
   }
+  if (input.orderType !== "takeaway" && input.orderType !== "dinein") {
+    return { error: "Tipo de pedido inválido." };
+  }
+  if (
+    input.paymentMethod !== "efectivo" &&
+    input.paymentMethod !== "transferencia"
+  ) {
+    return { error: "Método de pago inválido." };
+  }
 
-  // Precios reales desde la base de datos.
-  const ids = lines.map((l) => l.id);
+  const ids = input.lines.map((l) => l.productId);
   const { data: products, error: productsError } = await supabase
     .from("products")
     .select("id, price, is_active")
@@ -38,17 +65,45 @@ export async function createOrder(
     return { error: "No se pudieron verificar los productos." };
   }
 
-  const items: { product_id: string; quantity: number; unit_price: number }[] =
-    [];
+  const items: {
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+    notes: string | null;
+  }[] = [];
   let total = 0;
 
-  for (const line of lines) {
-    const product = products.find((p) => p.id === line.id);
+  for (const line of input.lines) {
+    const product = products.find((p) => p.id === line.productId);
     if (!product || !product.is_active) continue;
+
     const quantity = Math.max(1, Math.floor(Number(line.quantity) || 1));
-    const unitPrice = Number(product.price);
+    const basePrice = Number(product.price);
+
+    // Resolver extras desde la lista canonica (precio real, no del cliente).
+    const validExtras = (line.extraIds ?? [])
+      .map((id) => getExtraById(id))
+      .filter((e): e is NonNullable<ReturnType<typeof getExtraById>> =>
+        Boolean(e),
+      );
+    const extrasTotal = validExtras.reduce((s, e) => s + e.price, 0);
+    const unitPrice = Math.round((basePrice + extrasTotal) * 100) / 100;
+
+    // Validar ingredientes quitados.
+    const removed = (line.removedIngredients ?? []).filter(isValidIngredient);
+
+    const notes = formatCustomizationNotes({
+      removedIngredients: removed,
+      extras: validExtras,
+    });
+
     total += unitPrice * quantity;
-    items.push({ product_id: product.id, quantity, unit_price: unitPrice });
+    items.push({
+      product_id: product.id,
+      quantity,
+      unit_price: unitPrice,
+      notes,
+    });
   }
 
   if (items.length === 0) {
@@ -56,10 +111,15 @@ export async function createOrder(
   }
   total = Math.round(total * 100) / 100;
 
-  // Cabecera del pedido.
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .insert({ user_id: user.id, total, status: "pendiente" })
+    .insert({
+      user_id: user.id,
+      total,
+      status: "pendiente",
+      order_type: input.orderType,
+      payment_method: input.paymentMethod,
+    })
     .select("id")
     .single();
 
@@ -67,7 +127,6 @@ export async function createOrder(
     return { error: "No se pudo crear el pedido. Intenta de nuevo." };
   }
 
-  // Lineas del pedido.
   const { error: itemsError } = await supabase
     .from("order_items")
     .insert(items.map((it) => ({ ...it, order_id: order.id })));

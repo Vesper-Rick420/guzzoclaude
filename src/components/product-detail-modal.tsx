@@ -1,29 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Minus, Plus, UtensilsCrossed } from "lucide-react";
+import { X, Minus, Plus, UtensilsCrossed, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/format";
+import {
+  BURGER_EXTRAS,
+  DEFAULT_BURGER_INGREDIENTS,
+  type BurgerExtra,
+} from "@/lib/burger-options";
 import type { Product } from "@/types/db";
 
 type Props = {
   product: Product;
   open: boolean;
   onClose: () => void;
+  categorySlug?: string | null;
 };
 
-export function ProductDetailModal({ product, open, onClose }: Props) {
+export function ProductDetailModal({
+  product,
+  open,
+  onClose,
+  categorySlug,
+}: Props) {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [chosenExtras, setChosenExtras] = useState<string[]>([]);
+
+  const isBurger = categorySlug === "hamburguesas";
+  const basePrice = Number(product.price);
+
+  const extrasTotal = useMemo(
+    () =>
+      chosenExtras.reduce((sum, id) => {
+        const e = BURGER_EXTRAS.find((x) => x.id === id);
+        return e ? sum + e.price : sum;
+      }, 0),
+    [chosenExtras],
+  );
+
+  const unitPrice = Math.round((basePrice + extrasTotal) * 100) / 100;
 
   useEffect(() => {
-    if (open) setQty(1);
+    if (open) {
+      setQty(1);
+      setRemoved([]);
+      setChosenExtras([]);
+    }
   }, [open]);
 
-  // Cerrar con Escape y bloquear el scroll del fondo.
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -37,13 +67,31 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
     };
   }, [open, onClose]);
 
+  function toggleIngredient(name: string) {
+    setRemoved((r) =>
+      r.includes(name) ? r.filter((n) => n !== name) : [...r, name],
+    );
+  }
+
+  function toggleExtra(id: string) {
+    setChosenExtras((c) =>
+      c.includes(id) ? c.filter((e) => e !== id) : [...c, id],
+    );
+  }
+
   function handleAdd() {
+    const extras: BurgerExtra[] = chosenExtras
+      .map((id) => BURGER_EXTRAS.find((e) => e.id === id))
+      .filter((e): e is BurgerExtra => Boolean(e));
+
     addItem(
       {
-        id: product.id,
+        productId: product.id,
         name: product.name,
-        price: Number(product.price),
+        basePrice,
         image_url: product.image_url,
+        extras: isBurger ? extras : [],
+        removedIngredients: isBurger ? removed : [],
       },
       qty,
     );
@@ -68,7 +116,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
             exit={{ y: 40, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg overflow-hidden rounded-t-3xl border border-white/10 bg-guzzo-black shadow-2xl sm:rounded-3xl"
+            className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-guzzo-black shadow-2xl sm:rounded-3xl"
           >
             <button
               type="button"
@@ -79,7 +127,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
+            <div className="relative flex aspect-[16/10] shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br from-white/[0.07] to-transparent">
               {product.image_url ? (
                 <Image
                   src={product.image_url}
@@ -93,7 +141,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
               )}
             </div>
 
-            <div className="flex flex-col gap-4 p-6">
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
               <div>
                 <h2 className="font-heading text-2xl font-black text-guzzo-white">
                   {product.name}
@@ -106,9 +154,83 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
               </div>
 
               <span className="font-heading text-3xl font-extrabold text-guzzo-orange">
-                {formatPrice(Number(product.price))}
+                {formatPrice(basePrice)}
               </span>
 
+              {isBurger && (
+                <>
+                  <CustomizationSection
+                    title="Ingredientes"
+                    subtitle="Toca uno para quitarlo"
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {DEFAULT_BURGER_INGREDIENTS.map((ing) => {
+                        const isRemoved = removed.includes(ing);
+                        return (
+                          <button
+                            key={ing}
+                            type="button"
+                            onClick={() => toggleIngredient(ing)}
+                            className={
+                              isRemoved
+                                ? "rounded-full border border-red-400/40 bg-red-400/10 px-3 py-1.5 text-sm font-medium text-red-300 line-through transition-all"
+                                : "rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-white/80 transition-all hover:border-guzzo-orange/40"
+                            }
+                          >
+                            {ing}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </CustomizationSection>
+
+                  <CustomizationSection
+                    title="Extras"
+                    subtitle="Suma al precio"
+                  >
+                    <div className="flex flex-col gap-2">
+                      {BURGER_EXTRAS.map((extra) => {
+                        const isChosen = chosenExtras.includes(extra.id);
+                        return (
+                          <button
+                            key={extra.id}
+                            type="button"
+                            onClick={() => toggleExtra(extra.id)}
+                            className={
+                              isChosen
+                                ? "flex items-center justify-between gap-3 rounded-xl border border-guzzo-orange/50 bg-guzzo-orange/10 px-3 py-2.5 text-left transition-all"
+                                : "flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-all hover:border-guzzo-orange/30"
+                            }
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <span
+                                className={
+                                  isChosen
+                                    ? "flex h-5 w-5 items-center justify-center rounded-md bg-guzzo-orange text-guzzo-black"
+                                    : "h-5 w-5 rounded-md border border-white/20"
+                                }
+                              >
+                                {isChosen && (
+                                  <Check className="h-3.5 w-3.5" />
+                                )}
+                              </span>
+                              <span className="text-sm font-medium text-guzzo-white">
+                                {extra.name}
+                              </span>
+                            </span>
+                            <span className="text-sm font-semibold text-guzzo-orange">
+                              +{formatPrice(extra.price)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </CustomizationSection>
+                </>
+              )}
+            </div>
+
+            <div className="border-t border-white/10 bg-guzzo-black p-4">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5">
                   <button
@@ -137,7 +259,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                   onClick={handleAdd}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-guzzo-orange to-guzzo-orange-burnt px-5 py-3 font-semibold text-guzzo-black transition-all hover:brightness-110 active:scale-95"
                 >
-                  Agregar {formatPrice(Number(product.price) * qty)}
+                  Agregar {formatPrice(unitPrice * qty)}
                 </button>
               </div>
             </div>
@@ -145,5 +267,27 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function CustomizationSection({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="mb-3">
+        <h3 className="font-heading text-sm font-bold uppercase tracking-wide text-guzzo-orange">
+          {title}
+        </h3>
+        <p className="text-xs text-white/40">{subtitle}</p>
+      </div>
+      {children}
+    </div>
   );
 }

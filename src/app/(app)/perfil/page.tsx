@@ -27,7 +27,7 @@ export default async function PerfilPage() {
   const { data: ordersData } = await supabase
     .from("orders")
     .select(
-      "id, total, status, created_at, order_items(quantity, unit_price, products(name))",
+      "id, total, status, order_type, payment_method, created_at, order_items(quantity, unit_price, notes, products(name))",
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });

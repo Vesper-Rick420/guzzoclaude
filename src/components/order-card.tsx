@@ -1,3 +1,4 @@
+import { ShoppingBag, UtensilsCrossed, Wallet, ArrowLeftRight } from "lucide-react";
 import { formatPrice, formatDate } from "@/lib/format";
 import type { ProfileOrder, OrderStatus } from "@/types/db";
 
@@ -26,6 +27,8 @@ const STATUS: Record<OrderStatus, { label: string; className: string }> = {
 
 export function OrderCard({ order }: { order: ProfileOrder }) {
   const status = STATUS[order.status] ?? STATUS.pendiente;
+  const isTakeaway = order.order_type === "takeaway";
+  const isCash = order.payment_method === "efectivo";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -45,18 +48,41 @@ export function OrderCard({ order }: { order: ProfileOrder }) {
         </span>
       </div>
 
-      <ul className="mt-3 flex flex-col gap-1 border-t border-white/5 pt-3">
+      <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+        <span className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/60">
+          {isTakeaway ? (
+            <ShoppingBag className="h-3.5 w-3.5" />
+          ) : (
+            <UtensilsCrossed className="h-3.5 w-3.5" />
+          )}
+          {isTakeaway ? "Para llevar" : "Para servirse"}
+        </span>
+        <span className="flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 text-white/60">
+          {isCash ? (
+            <Wallet className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowLeftRight className="h-3.5 w-3.5" />
+          )}
+          {isCash ? "Efectivo" : "Transferencia"}
+        </span>
+      </div>
+
+      <ul className="mt-3 flex flex-col gap-1.5 border-t border-white/5 pt-3">
         {order.order_items.map((item, i) => (
-          <li
-            key={i}
-            className="flex justify-between gap-3 text-sm text-white/60"
-          >
-            <span>
-              {item.quantity} x {item.products?.name ?? "Producto"}
-            </span>
-            <span className="shrink-0">
-              {formatPrice(item.unit_price * item.quantity)}
-            </span>
+          <li key={i} className="text-sm text-white/60">
+            <div className="flex justify-between gap-3">
+              <span>
+                {item.quantity} x {item.products?.name ?? "Producto"}
+              </span>
+              <span className="shrink-0">
+                {formatPrice(item.unit_price * item.quantity)}
+              </span>
+            </div>
+            {item.notes && (
+              <p className="mt-0.5 text-xs italic text-white/40">
+                {item.notes}
+              </p>
+            )}
           </li>
         ))}
       </ul>

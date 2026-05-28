@@ -36,15 +36,21 @@ export type UserProfile = {
   created_at: string;
 };
 
+export type OrderType = "takeaway" | "dinein";
+export type PaymentMethod = "efectivo" | "transferencia";
+
 /** Pedido con sus productos, tal como lo usa el perfil. */
 export type ProfileOrder = {
   id: string;
   total: number;
   status: OrderStatus;
+  order_type: OrderType;
+  payment_method: PaymentMethod;
   created_at: string;
   order_items: {
     quantity: number;
     unit_price: number;
+    notes: string | null;
     products: { name: string } | null;
   }[];
 };
