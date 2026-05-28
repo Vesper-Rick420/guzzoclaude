@@ -1,24 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Rutas que NO requieren sesion iniciada.
-const PUBLIC_ROUTES = [
-  "/login",
-  "/registro",
-  "/recuperar",
-  "/actualizar-password",
-  "/auth",
-];
-
-function isPublic(pathname: string) {
-  return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + "/"),
-  );
-}
-
 /**
- * Refresca la sesion de Supabase en cada peticion y aplica la
- * proteccion de rutas. Se invoca desde el proxy (src/proxy.ts).
+ * Refresca la sesion de Supabase en cada peticion.
+ * No fuerza login: las paginas privadas (/perfil, /admin) hacen su propio
+ * redirect cuando corresponde. El home, menu y carrito quedan accesibles
+ * sin cuenta; el login solo se exige al confirmar el pedido.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -52,14 +39,7 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Sin sesion en una ruta privada -> al login
-  if (!user && !isPublic(path)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return copyCookies(response, NextResponse.redirect(url));
-  }
-
-  // Con sesion en login o registro -> al inicio
+  // Si ya hay sesion y estas en login o registro, te mando al inicio.
   if (user && (path === "/login" || path === "/registro")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";

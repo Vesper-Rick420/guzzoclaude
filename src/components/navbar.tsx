@@ -9,6 +9,7 @@ import {
   Menu as MenuIcon,
   X,
   LogOut,
+  LogIn,
   User,
   LayoutDashboard,
 } from "lucide-react";
@@ -53,8 +54,9 @@ export function Navbar({ profile }: NavbarProps) {
     router.refresh();
   }
 
-  const firstName = profile?.full_name?.trim().split(" ")[0] || "Cliente";
-  const initial = firstName.charAt(0).toUpperCase();
+  const isLoggedIn = profile !== null;
+  const firstName = profile?.full_name?.trim().split(" ")[0] || "Invitado";
+  const initial = isLoggedIn ? firstName.charAt(0).toUpperCase() : "?";
   const isAdmin = profile?.role === "admin";
 
   return (
@@ -143,39 +145,66 @@ export function Navbar({ profile }: NavbarProps) {
                   >
                     <div className="px-3 py-2">
                       <p className="truncate text-sm font-semibold text-guzzo-white">
-                        {profile?.full_name || "Cliente"}
+                        {isLoggedIn ? profile.full_name : "Sin sesión"}
                       </p>
                       <span className="text-xs uppercase tracking-wide text-guzzo-orange">
-                        {isAdmin ? "Administrador" : "Cliente"}
+                        {isLoggedIn
+                          ? isAdmin
+                            ? "Administrador"
+                            : "Cliente"
+                          : "Iniciá sesión para pedir"}
                       </span>
                     </div>
                     <div className="my-1 h-px bg-white/10" />
-                    <Link
-                      href="/perfil"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
-                    >
-                      <User className="h-4 w-4" />
-                      Mi perfil
-                    </Link>
-                    {isAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Panel admin
-                      </Link>
+                    {isLoggedIn ? (
+                      <>
+                        <Link
+                          href="/perfil"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
+                        >
+                          <User className="h-4 w-4" />
+                          Mi perfil
+                        </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Panel admin
+                          </Link>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-red-400"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Cerrar sesion
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/login"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
+                        >
+                          <LogIn className="h-4 w-4" />
+                          Iniciar sesión
+                        </Link>
+                        <Link
+                          href="/registro"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-guzzo-orange"
+                        >
+                          <User className="h-4 w-4" />
+                          Crear cuenta
+                        </Link>
+                      </>
                     )}
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-red-400"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Cerrar sesion
-                    </button>
                   </motion.div>
                 </>
               )}
