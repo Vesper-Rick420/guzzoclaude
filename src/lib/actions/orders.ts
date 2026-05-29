@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   getExtraById,
+  getSauceById,
   isValidIngredient,
   formatCustomizationNotes,
 } from "@/lib/burger-options";
@@ -12,6 +13,7 @@ type CartLine = {
   quantity: number;
   extraIds?: string[];
   removedIngredients?: string[];
+  sauceIds?: string[];
 };
 
 type CreateOrderInput = {
@@ -92,9 +94,17 @@ export async function createOrder(
     // Validar ingredientes quitados.
     const removed = (line.removedIngredients ?? []).filter(isValidIngredient);
 
+    // Resolver salsas desde la lista canonica.
+    const validSauces = (line.sauceIds ?? [])
+      .map((id) => getSauceById(id))
+      .filter((s): s is NonNullable<ReturnType<typeof getSauceById>> =>
+        Boolean(s),
+      );
+
     const notes = formatCustomizationNotes({
       removedIngredients: removed,
       extras: validExtras,
+      sauces: validSauces,
     });
 
     total += unitPrice * quantity;

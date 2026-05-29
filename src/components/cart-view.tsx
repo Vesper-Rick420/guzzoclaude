@@ -42,6 +42,7 @@ export function CartView() {
         quantity: i.quantity,
         extraIds: i.extras.map((e) => e.id),
         removedIngredients: i.removedIngredients,
+        sauceIds: i.sauces.map((s) => s.id),
       })),
       orderType,
       paymentMethod,
@@ -147,7 +148,8 @@ export function CartView() {
                 </span>
 
                 {(item.removedIngredients.length > 0 ||
-                  item.extras.length > 0) && (
+                  item.extras.length > 0 ||
+                  item.sauces.length > 0) && (
                   <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
                     {item.removedIngredients.map((ing) => (
                       <span
@@ -163,6 +165,14 @@ export function CartView() {
                         className="rounded-full bg-guzzo-orange/15 px-2 py-0.5 text-guzzo-orange"
                       >
                         + {e.name}
+                      </span>
+                    ))}
+                    {item.sauces.map((s) => (
+                      <span
+                        key={`s-${s.id}`}
+                        className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-yellow-300"
+                      >
+                        {s.name}
                       </span>
                     ))}
                   </div>

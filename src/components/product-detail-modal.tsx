@@ -8,9 +8,12 @@ import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/format";
 import {
-  BURGER_EXTRAS,
-  DEFAULT_BURGER_INGREDIENTS,
-  type BurgerExtra,
+  PRODUCT_EXTRAS,
+  SAUCES,
+  canCustomize,
+  ingredientsForCategory,
+  type ProductExtra,
+  type Sauce,
 } from "@/lib/burger-options";
 import type { Product } from "@/types/db";
 
@@ -31,14 +34,17 @@ export function ProductDetailModal({
   const [qty, setQty] = useState(1);
   const [removed, setRemoved] = useState<string[]>([]);
   const [chosenExtras, setChosenExtras] = useState<string[]>([]);
+  const [chosenSauces, setChosenSauces] = useState<string[]>([]);
 
-  const isBurger = categorySlug === "hamburguesas";
+  const customizable = canCustomize(categorySlug);
+  const isCombo = categorySlug === "combos";
+  const ingredients = ingredientsForCategory(categorySlug);
   const basePrice = Number(product.price);
 
   const extrasTotal = useMemo(
     () =>
       chosenExtras.reduce((sum, id) => {
-        const e = BURGER_EXTRAS.find((x) => x.id === id);
+        const e = PRODUCT_EXTRAS.find((x) => x.id === id);
         return e ? sum + e.price : sum;
       }, 0),
     [chosenExtras],
@@ -51,6 +57,7 @@ export function ProductDetailModal({
       setQty(1);
       setRemoved([]);
       setChosenExtras([]);
+      setChosenSauces([]);
     }
   }, [open]);
 
@@ -67,22 +74,20 @@ export function ProductDetailModal({
     };
   }, [open, onClose]);
 
-  function toggleIngredient(name: string) {
-    setRemoved((r) =>
-      r.includes(name) ? r.filter((n) => n !== name) : [...r, name],
-    );
-  }
-
-  function toggleExtra(id: string) {
-    setChosenExtras((c) =>
-      c.includes(id) ? c.filter((e) => e !== id) : [...c, id],
-    );
+  function toggle<T>(list: T[], value: T): T[] {
+    return list.includes(value)
+      ? list.filter((x) => x !== value)
+      : [...list, value];
   }
 
   function handleAdd() {
-    const extras: BurgerExtra[] = chosenExtras
-      .map((id) => BURGER_EXTRAS.find((e) => e.id === id))
-      .filter((e): e is BurgerExtra => Boolean(e));
+    const extras: ProductExtra[] = chosenExtras
+      .map((id) => PRODUCT_EXTRAS.find((e) => e.id === id))
+      .filter((e): e is ProductExtra => Boolean(e));
+
+    const sauces: Sauce[] = chosenSauces
+      .map((id) => SAUCES.find((s) => s.id === id))
+      .filter((s): s is Sauce => Boolean(s));
 
     addItem(
       {
@@ -90,8 +95,9 @@ export function ProductDetailModal({
         name: product.name,
         basePrice,
         image_url: product.image_url,
-        extras: isBurger ? extras : [],
-        removedIngredients: isBurger ? removed : [],
+        extras: customizable ? extras : [],
+        removedIngredients: customizable ? removed : [],
+        sauces: customizable ? sauces : [],
       },
       qty,
     );
@@ -157,76 +163,110 @@ export function ProductDetailModal({
                 {formatPrice(basePrice)}
               </span>
 
-              {isBurger && (
-                <>
-                  <CustomizationSection
-                    title="Ingredientes"
-                    subtitle="Toca uno para quitarlo"
-                  >
-                    <div className="flex flex-wrap gap-2">
-                      {DEFAULT_BURGER_INGREDIENTS.map((ing) => {
-                        const isRemoved = removed.includes(ing);
-                        return (
-                          <button
-                            key={ing}
-                            type="button"
-                            onClick={() => toggleIngredient(ing)}
-                            className={
-                              isRemoved
-                                ? "rounded-full border border-red-400/40 bg-red-400/10 px-3 py-1.5 text-sm font-medium text-red-300 line-through transition-all"
-                                : "rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-white/80 transition-all hover:border-guzzo-orange/40"
-                            }
-                          >
-                            {ing}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </CustomizationSection>
+              {customizable && ingredients.length > 0 && (
+                <CustomizationSection
+                  title={isCombo ? "Componentes" : "Ingredientes"}
+                  subtitle="Toca uno para quitarlo"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {ingredients.map((ing) => {
+                      const isRemoved = removed.includes(ing);
+                      return (
+                        <button
+                          key={ing}
+                          type="button"
+                          onClick={() =>
+                            setRemoved((r) => toggle(r, ing))
+                          }
+                          className={
+                            isRemoved
+                              ? "rounded-full border border-red-400/40 bg-red-400/10 px-3 py-1.5 text-sm font-medium text-red-300 line-through transition-all"
+                              : "rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-white/80 transition-all hover:border-guzzo-orange/40"
+                          }
+                        >
+                          {ing}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CustomizationSection>
+              )}
 
-                  <CustomizationSection
-                    title="Extras"
-                    subtitle="Suma al precio"
-                  >
-                    <div className="flex flex-col gap-2">
-                      {BURGER_EXTRAS.map((extra) => {
-                        const isChosen = chosenExtras.includes(extra.id);
-                        return (
-                          <button
-                            key={extra.id}
-                            type="button"
-                            onClick={() => toggleExtra(extra.id)}
-                            className={
-                              isChosen
-                                ? "flex items-center justify-between gap-3 rounded-xl border border-guzzo-orange/50 bg-guzzo-orange/10 px-3 py-2.5 text-left transition-all"
-                                : "flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-all hover:border-guzzo-orange/30"
-                            }
-                          >
-                            <span className="flex items-center gap-2.5">
-                              <span
-                                className={
-                                  isChosen
-                                    ? "flex h-5 w-5 items-center justify-center rounded-md bg-guzzo-orange text-guzzo-black"
-                                    : "h-5 w-5 rounded-md border border-white/20"
-                                }
-                              >
-                                {isChosen && (
-                                  <Check className="h-3.5 w-3.5" />
-                                )}
-                              </span>
-                              <span className="text-sm font-medium text-guzzo-white">
-                                {extra.name}
-                              </span>
+              {customizable && (
+                <CustomizationSection
+                  title="Extras"
+                  subtitle="Suma al precio"
+                >
+                  <div className="flex flex-col gap-2">
+                    {PRODUCT_EXTRAS.map((extra) => {
+                      const isChosen = chosenExtras.includes(extra.id);
+                      return (
+                        <button
+                          key={extra.id}
+                          type="button"
+                          onClick={() =>
+                            setChosenExtras((c) => toggle(c, extra.id))
+                          }
+                          className={
+                            isChosen
+                              ? "flex items-center justify-between gap-3 rounded-xl border border-guzzo-orange/50 bg-guzzo-orange/10 px-3 py-2.5 text-left transition-all"
+                              : "flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-all hover:border-guzzo-orange/30"
+                          }
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span
+                              className={
+                                isChosen
+                                  ? "flex h-5 w-5 items-center justify-center rounded-md bg-guzzo-orange text-guzzo-black"
+                                  : "h-5 w-5 rounded-md border border-white/20"
+                              }
+                            >
+                              {isChosen && (
+                                <Check className="h-3.5 w-3.5" />
+                              )}
                             </span>
-                            <span className="text-sm font-semibold text-guzzo-orange">
-                              +{formatPrice(extra.price)}
+                            <span className="text-sm font-medium text-guzzo-white">
+                              {extra.name}
                             </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </CustomizationSection>
-                </>
+                          </span>
+                          <span className="text-sm font-semibold text-guzzo-orange">
+                            +{formatPrice(extra.price)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CustomizationSection>
+              )}
+
+              {customizable && (
+                <CustomizationSection
+                  title="Salsas"
+                  subtitle="Elegí las que quieras (gratis)"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {SAUCES.map((sauce) => {
+                      const isChosen = chosenSauces.includes(sauce.id);
+                      return (
+                        <button
+                          key={sauce.id}
+                          type="button"
+                          onClick={() =>
+                            setChosenSauces((c) => toggle(c, sauce.id))
+                          }
+                          className={
+                            isChosen
+                              ? "flex items-center gap-1.5 rounded-full border border-guzzo-orange/50 bg-guzzo-orange/10 px-3 py-1.5 text-sm font-medium text-guzzo-orange transition-all"
+                              : "rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-white/80 transition-all hover:border-guzzo-orange/30"
+                          }
+                        >
+                          {isChosen && <Check className="h-3.5 w-3.5" />}
+                          {sauce.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CustomizationSection>
               )}
             </div>
 

@@ -21,12 +21,8 @@ type OrderModeContextValue = {
 };
 
 const OrderModeContext = createContext<OrderModeContextValue | null>(null);
-const STORAGE_KEY = "guzzo-order-mode";
-
-type StoredState = {
-  orderType: OrderType | null;
-  paymentMethod: PaymentMethod;
-};
+const SESSION_KEY = "guzzo-order-type";
+const PAYMENT_KEY = "guzzo-payment-method";
 
 export function OrderModeProvider({ children }: { children: ReactNode }) {
   const [orderType, setOrderTypeState] = useState<OrderType | null>(null);
@@ -36,18 +32,16 @@ export function OrderModeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as StoredState;
-        if (parsed.orderType === "takeaway" || parsed.orderType === "dinein") {
-          setOrderTypeState(parsed.orderType);
-        }
-        if (
-          parsed.paymentMethod === "efectivo" ||
-          parsed.paymentMethod === "transferencia"
-        ) {
-          setPaymentMethodState(parsed.paymentMethod);
-        }
+      // orderType en sessionStorage: se borra al cerrar la pestaña,
+      // asi el modal de bienvenida vuelve a aparecer en la proxima visita.
+      const savedType = sessionStorage.getItem(SESSION_KEY);
+      if (savedType === "takeaway" || savedType === "dinein") {
+        setOrderTypeState(savedType);
+      }
+      // paymentMethod en localStorage: recordamos la preferencia del cliente.
+      const savedPay = localStorage.getItem(PAYMENT_KEY);
+      if (savedPay === "efectivo" || savedPay === "transferencia") {
+        setPaymentMethodState(savedPay);
       }
     } catch {
       // estado corrupto: se ignora
@@ -57,9 +51,14 @@ export function OrderModeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    const data: StoredState = { orderType, paymentMethod };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [orderType, paymentMethod, hydrated]);
+    if (orderType) sessionStorage.setItem(SESSION_KEY, orderType);
+    else sessionStorage.removeItem(SESSION_KEY);
+  }, [orderType, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(PAYMENT_KEY, paymentMethod);
+  }, [paymentMethod, hydrated]);
 
   // needsSelection es true solo cuando ya hidratamos Y no hay seleccion guardada.
   // Evita parpadeo del modal en la primera carga (SSR -> CSR).

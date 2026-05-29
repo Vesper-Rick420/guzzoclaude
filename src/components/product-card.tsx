@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
 import { formatPrice } from "@/lib/format";
+import { canCustomize } from "@/lib/burger-options";
 import { ProductDetailModal } from "@/components/product-detail-modal";
 import type { Product } from "@/types/db";
 
@@ -20,8 +21,8 @@ export function ProductCard({ product, categorySlug = null }: Props) {
   const [detailOpen, setDetailOpen] = useState(false);
 
   function handleAdd() {
-    // Si es hamburguesa, abrimos el modal para que personalice antes de agregar.
-    if (categorySlug === "hamburguesas") {
+    // Hamburguesas y combos: abrimos el modal para personalizar.
+    if (canCustomize(categorySlug)) {
       setDetailOpen(true);
       return;
     }

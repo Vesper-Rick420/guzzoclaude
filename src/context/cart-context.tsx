@@ -14,6 +14,11 @@ export type CartLineExtra = {
   price: number;
 };
 
+export type CartLineSauce = {
+  id: string;
+  name: string;
+};
+
 export type CartItem = {
   lineId: string;
   productId: string;
@@ -24,6 +29,7 @@ export type CartItem = {
   quantity: number;
   extras: CartLineExtra[];
   removedIngredients: string[];
+  sauces: CartLineSauce[];
 };
 
 type AddItemInput = {
@@ -33,6 +39,7 @@ type AddItemInput = {
   image_url: string | null;
   extras?: CartLineExtra[];
   removedIngredients?: string[];
+  sauces?: CartLineSauce[];
 };
 
 type CartContextValue = {
@@ -48,17 +55,24 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "guzzo-cart";
 
-// Genera una clave estable a partir de productId + extras + ingredientes quitados
-// para fusionar lineas identicas y separar las personalizadas.
+// Genera una clave estable a partir de productId + extras + ingredientes
+// quitados + salsas para fusionar lineas identicas y separar las personalizadas.
 function buildLineId(
   productId: string,
   extras: CartLineExtra[],
   removed: string[],
+  sauces: CartLineSauce[],
 ): string {
-  if (extras.length === 0 && removed.length === 0) return productId;
+  if (
+    extras.length === 0 &&
+    removed.length === 0 &&
+    sauces.length === 0
+  )
+    return productId;
   const extraIds = [...extras.map((e) => e.id)].sort().join(",");
   const removedNames = [...removed].sort().join(",");
-  return `${productId}|e:${extraIds}|r:${removedNames}`;
+  const sauceIds = [...sauces.map((s) => s.id)].sort().join(",");
+  return `${productId}|e:${extraIds}|r:${removedNames}|s:${sauceIds}`;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -75,7 +89,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           Array.isArray(parsed) &&
           parsed.every((i) => typeof i?.lineId === "string")
         ) {
-          setItems(parsed as CartItem[]);
+          const normalized: CartItem[] = parsed.map((i) => ({
+            ...i,
+            sauces: Array.isArray(i.sauces) ? i.sauces : [],
+            extras: Array.isArray(i.extras) ? i.extras : [],
+            removedIngredients: Array.isArray(i.removedIngredients)
+              ? i.removedIngredients
+              : [],
+          }));
+          setItems(normalized);
         }
       }
     } catch {
@@ -92,10 +114,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   function addItem(input: AddItemInput, quantity = 1) {
     const extras = input.extras ?? [];
     const removedIngredients = input.removedIngredients ?? [];
+    const sauces = input.sauces ?? [];
     const extrasTotal = extras.reduce((s, e) => s + e.price, 0);
     const unitPrice =
       Math.round((input.basePrice + extrasTotal) * 100) / 100;
-    const lineId = buildLineId(input.productId, extras, removedIngredients);
+    const lineId = buildLineId(
+      input.productId,
+      extras,
+      removedIngredients,
+      sauces,
+    );
 
     setItems((prev) => {
       const existing = prev.find((i) => i.lineId === lineId);
@@ -118,6 +146,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           quantity,
           extras,
           removedIngredients,
+          sauces,
         },
       ];
     });
