@@ -1,4 +1,4 @@
-import { ShoppingBag, UtensilsCrossed, Wallet, ArrowLeftRight } from "lucide-react";
+import { ShoppingBag, UtensilsCrossed, Wallet, CreditCard } from "lucide-react";
 import { formatPrice, formatDate } from "@/lib/format";
 import type { ProfileOrder, OrderStatus } from "@/types/db";
 
@@ -29,6 +29,12 @@ export function OrderCard({ order }: { order: ProfileOrder }) {
   const status = STATUS[order.status] ?? STATUS.pendiente;
   const isTakeaway = order.order_type === "takeaway";
   const isCash = order.payment_method === "efectivo";
+  // "transferencia" se trata como tarjeta a la hora de mostrarse.
+  const paymentLabel = isCash
+    ? "Efectivo"
+    : order.payment_method === "transferencia"
+      ? "Transferencia"
+      : "Tarjeta";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -61,9 +67,9 @@ export function OrderCard({ order }: { order: ProfileOrder }) {
           {isCash ? (
             <Wallet className="h-3.5 w-3.5" />
           ) : (
-            <ArrowLeftRight className="h-3.5 w-3.5" />
+            <CreditCard className="h-3.5 w-3.5" />
           )}
-          {isCash ? "Efectivo" : "Transferencia"}
+          {paymentLabel}
         </span>
       </div>
 

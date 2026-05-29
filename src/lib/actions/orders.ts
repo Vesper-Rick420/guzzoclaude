@@ -19,7 +19,7 @@ type CartLine = {
 type CreateOrderInput = {
   lines: CartLine[];
   orderType: "takeaway" | "dinein";
-  paymentMethod: "efectivo" | "transferencia";
+  paymentMethod: "efectivo" | "tarjeta";
 };
 
 type CreateOrderResult =
@@ -52,7 +52,7 @@ export async function createOrder(
   }
   if (
     input.paymentMethod !== "efectivo" &&
-    input.paymentMethod !== "transferencia"
+    input.paymentMethod !== "tarjeta"
   ) {
     return { error: "Método de pago inválido." };
   }

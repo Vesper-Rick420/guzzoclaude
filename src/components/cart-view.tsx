@@ -10,31 +10,36 @@ import {
   ShoppingBag,
   UtensilsCrossed,
   CheckCircle2,
-  Wallet,
-  ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/context/cart-context";
-import { useOrderMode } from "@/context/order-mode-context";
+import {
+  useOrderMode,
+  type PaymentMethod,
+} from "@/context/order-mode-context";
 import { formatPrice } from "@/lib/format";
 import { createOrder } from "@/lib/actions/orders";
+import { PaymentMethodModal } from "@/components/payment-method-modal";
 
 export function CartView() {
   const { items, total, updateQuantity, removeItem, clear } = useCart();
-  const {
-    orderType,
-    paymentMethod,
-    setOrderType,
-    setPaymentMethod,
-  } = useOrderMode();
+  const { orderType, setOrderType, setPaymentMethod } = useOrderMode();
   const [loading, setLoading] = useState(false);
   const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
+  const [payOpen, setPayOpen] = useState(false);
 
-  async function handleConfirm() {
+  function openPayModal() {
     if (!orderType) {
       toast.error("Elegí 'Para llevar' o 'Para servirse' primero.");
       return;
     }
+    if (items.length === 0) return;
+    setPayOpen(true);
+  }
+
+  async function handleConfirm(method: PaymentMethod) {
+    if (!orderType) return;
+    setPaymentMethod(method);
     setLoading(true);
     const result = await createOrder({
       lines: items.map((i) => ({
@@ -45,15 +50,17 @@ export function CartView() {
         sauceIds: i.sauces.map((s) => s.id),
       })),
       orderType,
-      paymentMethod,
+      paymentMethod: method,
     });
     setLoading(false);
 
     if ("error" in result) {
       toast.error(result.error);
+      setPayOpen(false);
       return;
     }
     setConfirmedTotal(result.total);
+    setPayOpen(false);
     clear();
     toast.success("¡Pedido confirmado!");
   }
@@ -235,27 +242,6 @@ export function CartView() {
             </div>
           </section>
 
-          {/* Metodo de pago */}
-          <section>
-            <h2 className="font-heading text-sm font-bold uppercase tracking-wide text-guzzo-orange">
-              Pagar con
-            </h2>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <ChoiceButton
-                active={paymentMethod === "efectivo"}
-                onClick={() => setPaymentMethod("efectivo")}
-                icon={<Wallet className="h-5 w-5" />}
-                label="Efectivo"
-              />
-              <ChoiceButton
-                active={paymentMethod === "transferencia"}
-                onClick={() => setPaymentMethod("transferencia")}
-                icon={<ArrowLeftRight className="h-5 w-5" />}
-                label="Transferencia"
-              />
-            </div>
-          </section>
-
           {/* Totales */}
           <section>
             <h2 className="font-heading text-sm font-bold uppercase tracking-wide text-guzzo-orange">
@@ -282,14 +268,22 @@ export function CartView() {
 
           <button
             type="button"
-            onClick={handleConfirm}
+            onClick={openPayModal}
             disabled={loading}
             className="w-full rounded-xl bg-gradient-to-r from-guzzo-orange to-guzzo-orange-burnt px-6 py-3 font-semibold text-guzzo-black transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Confirmando..." : "Confirmar pedido"}
+            Pagar
           </button>
         </aside>
       </div>
+
+      <PaymentMethodModal
+        open={payOpen}
+        total={total}
+        loading={loading}
+        onClose={() => setPayOpen(false)}
+        onConfirm={handleConfirm}
+      />
     </div>
   );
 }

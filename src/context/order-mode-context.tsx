@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export type OrderType = "takeaway" | "dinein";
-export type PaymentMethod = "efectivo" | "transferencia";
+export type PaymentMethod = "efectivo" | "tarjeta";
 
 type OrderModeContextValue = {
   orderType: OrderType | null;
@@ -40,7 +40,7 @@ export function OrderModeProvider({ children }: { children: ReactNode }) {
       }
       // paymentMethod en localStorage: recordamos la preferencia del cliente.
       const savedPay = localStorage.getItem(PAYMENT_KEY);
-      if (savedPay === "efectivo" || savedPay === "transferencia") {
+      if (savedPay === "efectivo" || savedPay === "tarjeta") {
         setPaymentMethodState(savedPay);
       }
     } catch {

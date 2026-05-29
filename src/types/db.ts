@@ -37,7 +37,8 @@ export type UserProfile = {
 };
 
 export type OrderType = "takeaway" | "dinein";
-export type PaymentMethod = "efectivo" | "transferencia";
+// "transferencia" se conserva por compatibilidad con pedidos antiguos.
+export type PaymentMethod = "efectivo" | "tarjeta" | "transferencia";
 
 /** Pedido con sus productos, tal como lo usa el perfil. */
 export type ProfileOrder = {
